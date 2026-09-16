@@ -5,16 +5,141 @@
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
-  background-color: #f4f4f4;
-  color: #222;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+button,
+input {
+  font: inherit;
 }
 
 main {
-  width: min(1100px, 90%);
+  width: min(1100px, 92%);
   margin: 0 auto;
-  padding: 40px 0;
+  padding: 40px 0 60px;
 }
 
 h1 {
-  margin-bottom: 10px;
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 2.4rem;
+}
+
+main > p {
+  text-align: center;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 650px;
+  margin: 30px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+form label {
+  width: 100%;
+  font-weight: bold;
+}
+
+form input {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+}
+
+form input:focus {
+  border-color: #374151;
+}
+
+form button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #1f2937;
+  color: white;
+}
+
+section[aria-live='polite'] {
+  max-width: 650px;
+  margin: 20px auto;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 10px;
+  text-align: center;
+}
+
+main > section:last-child {
+  margin-top: 35px;
+}
+
+main > section:last-child > h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+main > section:last-child > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+article {
+  padding: 22px;
+  background: white;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+article:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+article img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+article h2 {
+  margin: 10px 0;
+  text-transform: capitalize;
+}
+
+article p {
+  margin: 6px 0;
+}
+
+@media (max-width: 600px) {
+  main {
+    width: 94%;
+    padding-top: 25px;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  form input,
+  form button {
+    width: 100%;
+  }
 }
