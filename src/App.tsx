@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import SearchForm from './components/SearchForm';
 import PokemonList from './components/PokemonList';
 import RequestStatus from './components/RequestStatus';
 
+import useDebounce from './hooks/useDebounce';
 import { getPokemonByName } from './services/pokeApi';
 
 import type {
@@ -14,7 +15,11 @@ import type {
 
 function App() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [submittedSearch, setSubmittedSearch] = useState('');
+
+  const [pokemonList, setPokemonList] =
+    useState<Pokemon[]>([]);
+
   const [status, setStatus] =
     useState<RequestStatusType>('idle');
 
@@ -22,9 +27,17 @@ function App() {
     'Escribe el nombre de un Pokémon para comenzar.',
   );
 
-  async function handleSubmit(
+  const abortControllerRef =
+    useRef<AbortController | null>(null);
+
+  const debouncedSearch = useDebounce(
+    submittedSearch,
+    500,
+  );
+
+  function handleSubmit(
     event: FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  ): void {
     event.preventDefault();
 
     const value = searchTerm.trim();
@@ -35,45 +48,77 @@ function App() {
       return;
     }
 
-    setStatus('loading');
-    setMessage('Buscando Pokémon...');
+    setSubmittedSearch(value);
+  }
 
-    try {
-      const pokemon = await getPokemonByName(value);
+  useEffect(() => {
+    if (!debouncedSearch) {
+      return;
+    }
 
-      if (!pokemon) {
-        setStatus('empty');
-        setMessage(
-          'No se encontró ningún Pokémon con ese nombre.',
+    abortControllerRef.current?.abort();
+
+    const controller = new AbortController();
+
+    abortControllerRef.current = controller;
+
+    async function searchPokemon(): Promise<void> {
+      setStatus('loading');
+      setMessage('Buscando Pokémon...');
+
+      try {
+        const pokemon = await getPokemonByName(
+          debouncedSearch,
+          controller.signal,
         );
-        return;
-      }
 
-      setPokemonList((currentPokemon) => {
-        const alreadyExists = currentPokemon.some(
-          (item) => item.id === pokemon.id,
-        );
-
-        if (alreadyExists) {
-          return currentPokemon;
+        if (!pokemon) {
+          setStatus('empty');
+          setMessage(
+            'No se encontró ningún Pokémon con ese nombre.',
+          );
+          return;
         }
 
-        return [...currentPokemon, pokemon];
-      });
+        setPokemonList((currentPokemon) => {
+          const alreadyExists = currentPokemon.some(
+            (item) => item.id === pokemon.id,
+          );
 
-      setStatus('success');
-      setMessage(
-        `Pokémon encontrado: ${pokemon.name}`,
-      );
+          if (alreadyExists) {
+            return currentPokemon;
+          }
 
-      setSearchTerm('');
-    } catch {
-      setStatus('error');
-      setMessage(
-        'Ocurrió un error al consultar PokéAPI.',
-      );
+          return [...currentPokemon, pokemon];
+        });
+
+        setStatus('success');
+        setMessage(
+          `Pokémon encontrado: ${pokemon.name}`,
+        );
+
+        setSearchTerm('');
+      } catch (error: unknown) {
+        if (
+          error instanceof DOMException &&
+          error.name === 'AbortError'
+        ) {
+          return;
+        }
+
+        setStatus('error');
+        setMessage(
+          'Ocurrió un error al consultar PokéAPI.',
+        );
+      }
     }
-  }
+
+    void searchPokemon();
+
+    return () => {
+      controller.abort();
+    };
+  }, [debouncedSearch]);
 
   return (
     <main>
